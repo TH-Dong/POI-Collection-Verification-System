@@ -96,13 +96,13 @@ export default function LandingPage() {
           <article id="contact" className="info-card">
             <h3>联系方式</h3>
             <div className="contact-list">
-              <a href="mailto:demo@poi-system.dev">
+              <a href="mailto:dongm4805@gmail.com">
                 <MailOutlined />
-                <span>demo@poi-system.dev</span>
+                <span>dongm4805@gmail.com</span>
               </a>
-              <a href="https://github.com/example/poi-verification-system" target="_blank" rel="noreferrer">
+              <a href="https://github.com/TH-Dong/POI-Collection-Verification-System" target="_blank" rel="noreferrer">
                 <EnvironmentOutlined />
-                <span>github.com/example/poi-verification-system</span>
+                <span>github.com/TH-Dong/POI-Collection-Verification-System</span>
               </a>
             </div>
           </article>
