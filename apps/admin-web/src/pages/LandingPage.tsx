@@ -35,8 +35,8 @@ export default function LandingPage() {
     <div className="landing-page">
       <header className="landing-header">
         <div className="landing-brand">
-          <img src={brandIcon} alt="POI 数据采集核验系统图标" className="landing-brand-mark" />
-          <span>POI 数据采集核验系统</span>
+          <img src={brandIcon} alt="POI系统图标" className="landing-brand-mark" />
+          <span>POI系统</span>
         </div>
 
         <nav className="landing-nav" aria-label="官网导航">
@@ -54,7 +54,7 @@ export default function LandingPage() {
           </div>
 
           <div className="hero-copy">
-            <h1>POI 数据采集核验系统</h1>
+            <h1>POI系统</h1>
             <p>
               面向 POI 数据采集、核验、整改与地图辅助的教学演示系统，
               支持采集提交、核验处理、地图查看与流程追踪。
@@ -134,7 +134,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="landing-footer">
-        © 2024 POI 数据采集核验系统 · 教学演示用途
+        © 2024 POI系统 · 教学演示用途
       </footer>
     </div>
   );
