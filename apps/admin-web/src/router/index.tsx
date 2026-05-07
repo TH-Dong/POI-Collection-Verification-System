@@ -18,6 +18,8 @@ import PoiMapPage from '../pages/PoiMapPage';
 import TaskCenterPage from '../pages/TaskCenterPage';
 import UploadPage from '../pages/UploadPage';
 
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -100,5 +102,5 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ], {
-  basename: import.meta.env.BASE_URL,
+  basename: routerBasename,
 });
