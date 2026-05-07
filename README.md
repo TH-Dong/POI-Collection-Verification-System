@@ -1,5 +1,7 @@
 # POI 数据采集及核验移动应用
 
+A teaching demonstration system for POI data collection, verification, correction, and map-assisted operations, supporting data submission, verification processing, map viewing, and workflow tracking.
+
 本仓库当前已完成：
 
 - `阶段 0：项目定义与架构基线`
