@@ -153,7 +153,7 @@ export default function PoiListPage() {
                 onChange={(event) => setKeyword(event.target.value)}
                 style={{ width: 300 }}
               />
-             <Button onClick={() => navigate('/map')}>进入地图</Button>
+             <Button onClick={() => navigate('/app/map')}>进入地图</Button>
            </Space>
         </div>
       </div>

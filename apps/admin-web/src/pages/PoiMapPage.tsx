@@ -263,7 +263,7 @@ export default function PoiMapPage() {
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>空间分布</h2>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--color-text-muted)' }}>{isAdmin ? '跨维度点位分布' : '待办队列落位点'}</p>
         </div>
-        <Button onClick={() => navigate('/pois')} className="restrained-btn">{isAdmin ? '业务列表' : '待处理队列'}</Button>
+        <Button onClick={() => navigate('/app/pois')} className="restrained-btn">{isAdmin ? '业务列表' : '待处理队列'}</Button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(340px, 0.8fr)', gap: '16px', alignItems: 'start' }}>

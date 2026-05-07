@@ -31,7 +31,7 @@ export default function DisputeDetailPage() {
     <div>
       <div className="section-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <Button type="link" style={{ padding: 0, marginBottom: 'var(--space-16)', color: 'var(--color-text-muted)' }} onClick={() => navigate('/disputes')}>
+          <Button type="link" style={{ padding: 0, marginBottom: 'var(--space-16)', color: 'var(--color-text-muted)' }} onClick={() => navigate('/app/disputes')}>
             &larr; 返回争议处理列表
           </Button>
           <Typography.Title level={3} style={{ margin: 0, fontWeight: 700, letterSpacing: '-0.02em' }}>

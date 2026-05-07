@@ -20,7 +20,7 @@ import UploadPage from '../pages/UploadPage';
 
 export const router = createBrowserRouter([
   {
-    path: '/landing',
+    path: '/',
     element: <LandingPage />,
   },
   {
@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/',
+    path: '/app',
     element: <ProtectedRoute requiredRoles={['ADMIN', 'VERIFIER']} />,
     children: [
       {
@@ -99,4 +99,6 @@ export const router = createBrowserRouter([
     path: '*',
     element: <NotFoundPage />,
   },
-]);
+], {
+  basename: import.meta.env.BASE_URL,
+});

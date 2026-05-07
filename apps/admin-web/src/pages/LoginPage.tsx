@@ -18,7 +18,7 @@ export default function LoginPage() {
         user: result.user,
       });
       message.success('ACCESS GRANTED');
-      navigate('/');
+      navigate('/app');
     } catch (error: any) {
       message.error('ACCESS DENIED: Authentication Failed');
     } finally {

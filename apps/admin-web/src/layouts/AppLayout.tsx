@@ -7,6 +7,7 @@ import { hasPermission } from '../utils/permission';
 import { hasRole } from '../utils/role';
 
 const { Header, Sider, Content } = Layout;
+const ADMIN_BASE = '/app';
 
 export default function AppLayout() {
   const location = useLocation();
@@ -17,48 +18,48 @@ export default function AppLayout() {
 
   const menuItems = useMemo(
     () => [
-      { key: '/', icon: <DashboardOutlined />, label: '系统概览' },
-      { key: '/tasks', icon: <UnorderedListOutlined />, label: '任务中心' },
-      { key: '/notices', icon: <BellOutlined />, label: '通知中心' },
-      { key: '/chat', icon: <CommentOutlined />, label: '协作会话' },
-      { key: '/pois', icon: <EnvironmentOutlined />, label: isAdmin ? '处理进展' : '待核验列表' },
-      { key: '/map', icon: <AimOutlined />, label: isAdmin ? '地图进展' : '空间核验' },
-      { key: '/disputes', icon: <ProfileOutlined />, label: '争议处理' },
-      ...(canManageOperations ? [{ key: '/operations', icon: <SettingOutlined />, label: '运营配置' }] : []),
-      { key: '/upload', icon: <CloudUploadOutlined />, label: '附件测试' },
+      { key: ADMIN_BASE, icon: <DashboardOutlined />, label: '系统概览' },
+      { key: `${ADMIN_BASE}/tasks`, icon: <UnorderedListOutlined />, label: '任务中心' },
+      { key: `${ADMIN_BASE}/notices`, icon: <BellOutlined />, label: '通知中心' },
+      { key: `${ADMIN_BASE}/chat`, icon: <CommentOutlined />, label: '协作会话' },
+      { key: `${ADMIN_BASE}/pois`, icon: <EnvironmentOutlined />, label: isAdmin ? '处理进展' : '待核验列表' },
+      { key: `${ADMIN_BASE}/map`, icon: <AimOutlined />, label: isAdmin ? '地图进展' : '空间核验' },
+      { key: `${ADMIN_BASE}/disputes`, icon: <ProfileOutlined />, label: '争议处理' },
+      ...(canManageOperations ? [{ key: `${ADMIN_BASE}/operations`, icon: <SettingOutlined />, label: '运营配置' }] : []),
+      { key: `${ADMIN_BASE}/upload`, icon: <CloudUploadOutlined />, label: '附件测试' },
     ],
     [canManageOperations, isAdmin],
   );
 
   const selectedKeys = useMemo(() => {
-    if (location.pathname.startsWith('/tasks')) {
-      return ['/tasks'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/tasks`)) {
+      return [`${ADMIN_BASE}/tasks`];
     }
-    if (location.pathname.startsWith('/notices')) {
-      return ['/notices'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/notices`)) {
+      return [`${ADMIN_BASE}/notices`];
     }
-    if (location.pathname.startsWith('/operations')) {
-      return ['/operations'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/operations`)) {
+      return [`${ADMIN_BASE}/operations`];
     }
-    if (location.pathname.startsWith('/chat')) {
-      return ['/chat'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/chat`)) {
+      return [`${ADMIN_BASE}/chat`];
     }
-    if (location.pathname.startsWith('/conversations')) {
-      return ['/chat'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/conversations`)) {
+      return [`${ADMIN_BASE}/chat`];
     }
-    if (location.pathname.startsWith('/pois')) {
-      return ['/pois'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/pois`)) {
+      return [`${ADMIN_BASE}/pois`];
     }
-    if (location.pathname.startsWith('/upload')) {
-      return ['/upload'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/upload`)) {
+      return [`${ADMIN_BASE}/upload`];
     }
-    if (location.pathname.startsWith('/disputes')) {
-      return ['/disputes'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/disputes`)) {
+      return [`${ADMIN_BASE}/disputes`];
     }
-    if (location.pathname.startsWith('/map')) {
-      return ['/map'];
+    if (location.pathname.startsWith(`${ADMIN_BASE}/map`)) {
+      return [`${ADMIN_BASE}/map`];
     }
-    return ['/'];
+    return [ADMIN_BASE];
   }, [location.pathname]);
 
   return (
