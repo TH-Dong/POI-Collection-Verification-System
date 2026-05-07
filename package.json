@@ -1,0 +1,13 @@
+{
+  "name": "poi-collection-verification-system",
+  "private": true,
+  "workspaces": [
+    "apps/admin-web",
+    "apps/mobile-app"
+  ],
+  "scripts": {
+    "admin:dev": "npm run dev --workspace @poi/admin-web",
+    "admin:build": "npm run build --workspace @poi/admin-web",
+    "mobile:start": "npm run start --workspace @poi/mobile-app"
+  }
+}

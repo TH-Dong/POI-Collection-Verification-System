@@ -1,0 +1,71 @@
+package com.poi.system.dispute.entity;
+
+import com.poi.system.poi.entity.PoiInfo;
+import com.poi.system.poi.enums.PoiReviewDecision;
+import com.poi.system.user.entity.SysUser;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import java.time.Instant;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "poi_arbitration_record")
+public class PoiArbitrationRecord {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "poi_id", nullable = false)
+    private PoiInfo poi;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "dispute_id", nullable = false)
+    private PoiDispute dispute;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "reviewer_id", nullable = false)
+    private SysUser reviewer;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "final_result", nullable = false, length = 16)
+    private PoiReviewDecision finalResult;
+
+    @Column(nullable = false, length = 1000)
+    private String description;
+
+    @Column(name = "reviewed_at", nullable = false)
+    private Instant reviewedAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        Instant now = Instant.now();
+        this.createdAt = now;
+        if (this.reviewedAt == null) {
+            this.reviewedAt = now;
+        }
+    }
+}

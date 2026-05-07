@@ -1,0 +1,85 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: poi-system-backend
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+  datasource:
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:poi_system}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    username: ${MYSQL_USERNAME:poi_user}
+    password: ${MYSQL_PASSWORD:poi_password}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:poi-system-stage1-jwt-secret-key-must-be-long-enough}
+    access-token-ttl: ${JWT_EXPIRES_IN:PT12H}
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:19006
+      - http://localhost:8081
+      - exp://127.0.0.1:8081
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+    access-key: ${MINIO_ROOT_USER:minioadmin}
+    secret-key: ${MINIO_ROOT_PASSWORD:minioadmin123}
+    bucket: ${MINIO_BUCKET:poi-stage1}
+  file:
+    mode: ${FILE_STORAGE_MODE:MINIO_FALLBACK_LOCAL}
+    local-upload-dir: ${LOCAL_UPLOAD_DIR:${java.io.tmpdir}/poi-stage1-uploads}
+  messaging:
+    rabbit-enabled: ${APP_MESSAGING_RABBIT_ENABLED:false}
+    notice-exchange: ${APP_NOTICE_EXCHANGE:poi.notice.exchange}
+    notice-routing-key: ${APP_NOTICE_ROUTING_KEY:poi.notice}
+  ocr:
+    # 默认继续走 mock，填好 SiliconFlow 配置后把 OCR_PROVIDER 改成 SILICONFLOW 即可切换真实调用。
+    provider: ${OCR_PROVIDER:MOCK}
+    base-url: ${OCR_BASE_URL:https://api.siliconflow.cn/v1}
+    api-key: ${OCR_API_KEY:}
+    model: ${OCR_MODEL:Qwen/Qwen3-VL-32B-Thinking}
+    timeout: ${OCR_TIMEOUT:PT45S}
+  wechat:
+    # MOCK: 当前演示码模式；OPEN_PLATFORM: 真实微信开放平台移动应用登录。
+    provider: ${WECHAT_PROVIDER:MOCK}
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+    api-base-url: ${WECHAT_API_BASE_URL:https://api.weixin.qq.com}
+    user-info-lang: ${WECHAT_USERINFO_LANG:zh_CN}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    com.poi.system: INFO

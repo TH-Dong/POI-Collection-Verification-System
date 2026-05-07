@@ -1,0 +1,25 @@
+export const appTheme = {
+  // Source design tokens are the OKLCH palette used by the web side.
+  // React Native StyleSheet does not support OKLCH reliably, so these are perceptual hex matches.
+  background: '#FFFFFF',
+  foreground: '#3F3F46',
+  card: '#FFFFFF',
+  primary: '#3B6FF5',
+  primaryPressed: '#2759D8',
+  primarySoft: '#E8F4FF',
+  secondary: '#F3F5F9',
+  muted: '#FBFCFD',
+  mutedForeground: '#71717A',
+  accent: '#E8F4FF',
+  accentForeground: '#2446A6',
+  destructive: '#E5484D',
+  destructiveSoft: '#FFF0F0',
+  warning: '#B56A19',
+  warningSoft: '#FFF4D8',
+  success: '#277C68',
+  successSoft: '#EAF8F3',
+  border: '#E5E9F2',
+  input: '#E5E9F2',
+  ring: '#3B6FF5',
+  radius: 18,
+};
