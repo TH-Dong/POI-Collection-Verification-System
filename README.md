@@ -239,6 +239,22 @@ npx expo start --dev-client
 
 下面的流程面向第一次在新电脑或新手机上使用本系统。
 
+## APK 下载
+
+当前可直接下载的安卓安装包：
+
+- [下载 Android APK](./apps/mobile-app/android/app/build/outputs/apk/release/app-release.apk)
+
+如果你是在手机上访问 GitHub：
+
+1. 打开仓库首页
+2. 进入 `README` 中的 APK 下载链接
+3. 点击下载 `app-release.apk`
+4. 下载完成后允许浏览器或文件管理器安装未知来源应用
+5. 安装完成后打开 App
+
+如果 GitHub 页面预览没有直接开始下载，可以进入该文件页面后选择 `Download raw file`。
+
 ### A. 下载源码
 
 1. 打开项目仓库 GitHub 页面
@@ -309,6 +325,38 @@ npm run android:install-preview
 ```bash
 adb install -r android/app/build/outputs/apk/release/app-release.apk
 ```
+
+## 给别人使用时要注意什么
+
+可以把 APK 直接发给别人安装，但是否能正常使用，取决于后端是否可访问。
+
+### 情况 1：你现在这种本地联调方式
+
+当前移动端接口地址通常是：
+
+```text
+http://你的电脑局域网IP:8080
+```
+
+这意味着：
+
+- 你的后端必须开着
+- 你的电脑必须在线
+- 别人的手机必须能访问到你的电脑
+- 通常需要在同一局域网内
+
+如果你关闭后端，或者别人不在同一个网络环境，App 就无法正常使用登录、列表、上传、OCR、通知等功能。
+
+### 情况 2：你想让别人随时随地都能使用
+
+你需要：
+
+1. 把后端部署到公网服务器
+2. 把数据库、文件服务、OCR 配置一起部署好
+3. 把移动端的 `EXPO_PUBLIC_API_BASE_URL` 改成公网域名或公网 IP
+4. 重新打包 APK
+
+只有这样，别人安装后才不依赖你本地电脑持续开机。
 
 ### F. 采集者实际使用流程
 
