@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/wechat/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/files/content").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/files/local/**").permitAll()
                         .anyRequest().authenticated()
                 )

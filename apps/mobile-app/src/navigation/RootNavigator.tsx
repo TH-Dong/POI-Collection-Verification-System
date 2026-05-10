@@ -1,22 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
-import AccountSecurityScreen from '../screens/AccountSecurityScreen';
-import ConversationDetailScreen from '../screens/ConversationDetailScreen';
-import ConversationListScreen from '../screens/ConversationListScreen';
-import HomeScreen from '../screens/HomeScreen';
-import LoginScreen from '../screens/LoginScreen';
-import NoticeCenterScreen from '../screens/NoticeCenterScreen';
-import DisputeSubmitScreen from '../screens/DisputeSubmitScreen';
-import PoiDetailScreen from '../screens/PoiDetailScreen';
-import PoiFormScreen from '../screens/PoiFormScreen';
-import PoiListScreen from '../screens/PoiListScreen';
-import PoiMapScreen from '../screens/PoiMapScreen';
-import TaskCenterScreen from '../screens/TaskCenterScreen';
-import UploadTestScreen from '../screens/UploadTestScreen';
-import VerifierDisputeDetailScreen from '../screens/VerifierDisputeDetailScreen';
-import VerifierDisputeListScreen from '../screens/VerifierDisputeListScreen';
-import VerifierPoiDetailScreen from '../screens/VerifierPoiDetailScreen';
-import VerifierPoiListScreen from '../screens/VerifierPoiListScreen';
 import { appTheme } from '../components/appTheme';
 import { useAuthStore } from '../store/authStore';
 import type { RootStackParamList } from '../types/navigation';
@@ -25,6 +8,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const token = useAuthStore((state) => state.token);
+  const LoginScreen = require('../screens/LoginScreen').default;
 
   const screenOptions = useMemo(
     () => ({
@@ -48,7 +32,29 @@ export default function RootNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       ) : (
         <>
+          {(() => {
+            const HomeScreen = require('../screens/HomeScreen').default;
+            const ProfileSettingsScreen = require('../screens/ProfileSettingsScreen').default;
+            const AccountSecurityScreen = require('../screens/AccountSecurityScreen').default;
+            const TaskCenterScreen = require('../screens/TaskCenterScreen').default;
+            const NoticeCenterScreen = require('../screens/NoticeCenterScreen').default;
+            const ConversationListScreen = require('../screens/ConversationListScreen').default;
+            const ConversationDetailScreen = require('../screens/ConversationDetailScreen').default;
+            const PoiFormScreen = require('../screens/PoiFormScreen').default;
+            const PoiListScreen = require('../screens/PoiListScreen').default;
+            const PoiDetailScreen = require('../screens/PoiDetailScreen').default;
+            const DisputeSubmitScreen = require('../screens/DisputeSubmitScreen').default;
+            const PoiMapScreen = require('../screens/PoiMapScreen').default;
+            const VerifierPoiListScreen = require('../screens/VerifierPoiListScreen').default;
+            const VerifierPoiDetailScreen = require('../screens/VerifierPoiDetailScreen').default;
+            const VerifierDisputeListScreen = require('../screens/VerifierDisputeListScreen').default;
+            const VerifierDisputeDetailScreen = require('../screens/VerifierDisputeDetailScreen').default;
+            const UploadTestScreen = require('../screens/UploadTestScreen').default;
+
+            return (
+              <>
           <Stack.Screen name="Home" component={HomeScreen} options={{ title: '工作台' }} />
+          <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} options={{ title: '个人资料' }} />
           <Stack.Screen name="AccountSecurity" component={AccountSecurityScreen} options={{ title: '账号安全' }} />
           <Stack.Screen name="TaskCenter" component={TaskCenterScreen} options={{ title: '任务中心' }} />
           <Stack.Screen name="NoticeCenter" component={NoticeCenterScreen} options={{ title: '通知中心' }} />
@@ -64,6 +70,9 @@ export default function RootNavigator() {
           <Stack.Screen name="VerifierDisputeList" component={VerifierDisputeListScreen} options={{ title: '争议处理' }} />
           <Stack.Screen name="VerifierDisputeDetail" component={VerifierDisputeDetailScreen} options={{ title: '争议详情' }} />
           <Stack.Screen name="UploadTest" component={UploadTestScreen} options={{ title: '上传联调' }} />
+              </>
+            );
+          })()}
         </>
       )}
     </Stack.Navigator>

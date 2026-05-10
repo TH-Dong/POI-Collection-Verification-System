@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { login, weChatLogin } from '../api/auth';
+import { requestWeChatAuthCode, WeChatAuthError } from '../services/wechatAuth';
 import { useAuthStore } from '../store/authStore';
 
 export default function LoginScreen() {
@@ -36,24 +37,19 @@ export default function LoginScreen() {
   };
 
   const handleWeChatLogin = async () => {
-    const normalizedUsername = username.trim().toLowerCase();
-    const authCode =
-      normalizedUsername === 'verifier'
-        ? 'wx-verifier2'
-        : normalizedUsername === 'admin'
-          ? 'wx-admin'
-          : 'wx-collector2';
-
     try {
       setSubmitting(true);
       setErrorText('');
+      const authCode = await requestWeChatAuthCode();
       const result = await weChatLogin({ authCode });
       setAuth({
         token: result.accessToken,
         user: result.user,
       });
     } catch (error: any) {
-      if (!error?.response) {
+      if (error instanceof WeChatAuthError) {
+        setErrorText(error.message);
+      } else if (!error?.response) {
         setErrorText('后端服务不可达，请先确认 8080 后端已启动');
       } else {
         setErrorText(error?.response?.data?.message || '微信登录失败，请稍后重试');
@@ -72,6 +68,8 @@ export default function LoginScreen() {
       <View pointerEvents="none" style={styles.bgDecorWrap}>
         <View style={styles.bgDecorLarge} />
         <View style={styles.bgDecorSmall} />
+        <View style={styles.bgDecorHalo} />
+        <View style={styles.bgDecorBubble} />
       </View>
 
       <ScrollView
@@ -82,7 +80,11 @@ export default function LoginScreen() {
       >
         <View style={styles.header}>
           <View style={styles.logoBox}>
-            <Ionicons name="map-outline" size={34} color="#F5FAFF" />
+            <Image
+              source={require('../../assets/app-icon-108.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.title}>欢迎登录</Text>
           <Text style={styles.subtitle}>POI 数据采集检验系统</Text>
@@ -102,8 +104,6 @@ export default function LoginScreen() {
               autoCorrect={false}
             />
           </View>
-
-          <View style={styles.divider} />
 
           <Text style={styles.fieldLabel}>密码</Text>
           <View style={styles.fieldRow}>
@@ -130,8 +130,6 @@ export default function LoginScreen() {
               />
             </Pressable>
           </View>
-
-          <View style={styles.divider} />
 
           <View style={styles.actionRow}>
             <Pressable
@@ -166,7 +164,9 @@ export default function LoginScreen() {
           ) : (
             <>
               <Text style={styles.loginBtnText}>登录</Text>
-              <Ionicons name="arrow-forward" size={26} color="#ECF3FF" />
+              <View style={styles.loginBtnArrowWrap}>
+                <Ionicons name="arrow-forward" size={26} color="#ECF3FF" />
+              </View>
             </>
           )}
         </Pressable>
@@ -199,8 +199,7 @@ export default function LoginScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>测试账号： collector / 123456   verifier / 123456</Text>
-          <Text style={styles.footerText}>微信演示码： wx-collector2 / wx-verifier2 / wx-admin</Text>
-          <Text style={styles.copyright}>© 2024 POI 数据采集检验系统</Text>
+          <Text style={styles.copyright}>© 2026 POI 数据采集检验系统</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -210,107 +209,144 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#EFF3FA',
+    backgroundColor: '#F3F7FF',
   },
   bgDecorWrap: {
     position: 'absolute',
-    top: -170,
-    right: -170,
-    width: 460,
-    height: 460,
-    borderRadius: 230,
-    overflow: 'hidden',
-    backgroundColor: '#EAF1FD',
+    top: -190,
+    right: -150,
+    width: 500,
+    height: 520,
   },
   bgDecorLarge: {
     position: 'absolute',
-    top: 10,
+    top: 0,
     right: 0,
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    backgroundColor: '#DBE8FA',
+    width: 420,
+    height: 420,
+    borderRadius: 210,
+    backgroundColor: 'rgba(183, 206, 245, 0.28)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.42)',
   },
   bgDecorSmall: {
     position: 'absolute',
-    top: 62,
-    left: 40,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: '#EDF4FF',
+    top: 92,
+    right: 56,
+    width: 278,
+    height: 278,
+    borderRadius: 139,
+    backgroundColor: 'rgba(229, 239, 255, 0.58)',
+  },
+  bgDecorHalo: {
+    position: 'absolute',
+    top: 116,
+    right: 140,
+    width: 118,
+    height: 118,
+    borderRadius: 59,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.34)',
+  },
+  bgDecorBubble: {
+    position: 'absolute',
+    top: 338,
+    right: 92,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.28)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.46)',
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 26,
+    paddingHorizontal: 22,
+    paddingTop: 18,
     paddingBottom: 34,
   },
   header: {
-    marginTop: 8,
-    marginBottom: 28,
+    marginTop: 18,
+    marginBottom: 26,
   },
   logoBox: {
-    width: 82,
-    height: 82,
-    borderRadius: 20,
-    backgroundColor: '#2F7BE0',
+    width: 94,
+    height: 94,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2D67D3',
+    backgroundColor: 'rgba(255, 255, 255, 0.42)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.68)',
+    shadowColor: '#8CA8D7',
     shadowOpacity: 0.18,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 5,
-    marginBottom: 18,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4,
+    marginBottom: 16,
+  },
+  logoImage: {
+    width: 78,
+    height: 78,
   },
   title: {
-    fontSize: 44,
-    lineHeight: 50,
-    fontWeight: '800',
-    color: '#0E1D45',
-    letterSpacing: -1.4,
+    fontSize: 42,
+    lineHeight: 48,
+    fontWeight: '900',
+    color: '#11245B',
+    letterSpacing: -1.8,
   },
   subtitle: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#5F6E8C',
-    fontWeight: '600',
-    letterSpacing: 0.2,
+    marginTop: 10,
+    fontSize: 17,
+    color: '#5A6C98',
+    fontWeight: '700',
+    letterSpacing: 0.1,
   },
   card: {
-    backgroundColor: '#F9FBFF',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.86)',
+    borderRadius: 28,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 18,
     borderWidth: 1,
-    borderColor: '#DDE5F4',
-    shadowColor: '#34538A',
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
+    borderColor: 'rgba(207, 220, 245, 0.88)',
+    shadowColor: '#8EA5CF',
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 4,
+    elevation: 6,
   },
   fieldLabel: {
-    color: '#627093',
+    color: '#6B79A1',
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 10,
   },
   fieldRow: {
-    minHeight: 52,
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(241, 246, 255, 0.88)',
+    borderWidth: 1,
+    borderColor: '#D6E1F5',
+    marginBottom: 16,
+    shadowColor: '#D5E0F5',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
   },
   fieldInput: {
     flex: 1,
     fontSize: 17,
     lineHeight: 22,
-    color: '#0F204A',
+    color: '#15295C',
     fontWeight: '700',
     padding: 0,
   },
@@ -319,15 +355,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   divider: {
-    height: 1,
-    backgroundColor: '#DCE3F0',
-    marginVertical: 14,
+    display: 'none',
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginTop: 2,
+    marginBottom: 14,
   },
   rememberWrap: {
     flexDirection: 'row',
@@ -335,124 +370,140 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   checkbox: {
-    width: 26,
-    height: 26,
+    width: 22,
+    height: 22,
     borderRadius: 7,
-    borderWidth: 1.5,
-    borderColor: '#9DAAD0',
+    borderWidth: 1,
+    borderColor: '#A8B9E7',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EEF4FF',
   },
   checkboxChecked: {
-    borderColor: '#4C7EF4',
-    backgroundColor: '#4C7EF4',
+    borderColor: '#5B84F3',
+    backgroundColor: '#5B84F3',
   },
   rememberText: {
     fontSize: 14,
-    color: '#5F6E8C',
-    fontWeight: '600',
+    color: '#60739C',
+    fontWeight: '700',
   },
   forgotText: {
     fontSize: 14,
-    color: '#4C7EF4',
-    fontWeight: '600',
+    color: '#5B84F3',
+    fontWeight: '700',
   },
   errorText: {
     color: '#D03A43',
     fontSize: 13,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   loginBtn: {
-    minHeight: 68,
-    borderRadius: 18,
-    backgroundColor: '#4B7EF2',
+    minHeight: 72,
+    borderRadius: 24,
+    backgroundColor: '#5D84F2',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 28,
-    marginTop: 4,
-    shadowColor: '#2D5ED2',
-    shadowOpacity: 0.24,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 5,
+    paddingLeft: 34,
+    paddingRight: 18,
+    marginTop: 2,
+    shadowColor: '#5D84F2',
+    shadowOpacity: 0.34,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
   },
   loginBtnPressed: {
-    backgroundColor: '#396DE8',
+    backgroundColor: '#4F77EA',
   },
   btnDisabled: {
     opacity: 0.55,
   },
   loginBtnText: {
     color: '#F6FAFF',
-    fontSize: 18,
-    letterSpacing: 1,
-    fontWeight: '700',
+    fontSize: 19,
+    letterSpacing: 0.8,
+    fontWeight: '800',
+  },
+  loginBtnArrowWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   separatorRow: {
-    marginTop: 18,
+    marginTop: 20,
     marginBottom: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 14,
   },
   separatorLine: {
     flex: 1,
-    height: 1.5,
-    backgroundColor: '#D4DCEB',
+    height: 1,
+    backgroundColor: '#D6DEEE',
   },
   separatorText: {
     fontSize: 14,
-    color: '#4A5878',
-    fontWeight: '500',
+    color: '#637398',
+    fontWeight: '600',
   },
   wechatCard: {
-    minHeight: 92,
-    borderRadius: 16,
-    backgroundColor: '#F9FBFF',
+    minHeight: 98,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
     borderWidth: 1,
-    borderColor: '#DDE5F4',
-    paddingHorizontal: 16,
+    borderColor: 'rgba(207, 220, 245, 0.88)',
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: '#94A7D1',
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   wechatCardPressed: {
-    backgroundColor: '#F1F6FF',
+    backgroundColor: '#F5F8FF',
   },
   wechatLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   wechatTitle: {
     fontSize: 18,
-    color: '#15264F',
+    color: '#152A5F',
     fontWeight: '800',
     marginBottom: 2,
   },
   wechatDesc: {
     fontSize: 13,
-    color: '#6D7D9E',
-    fontWeight: '500',
+    color: '#7483A4',
+    fontWeight: '600',
   },
   footer: {
     marginTop: 30,
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   footerText: {
     fontSize: 13,
-    color: '#838FA8',
+    color: '#8190AF',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   copyright: {
-    marginTop: 8,
+    marginTop: 2,
     fontSize: 12,
-    color: '#A0AABE',
-    fontWeight: '500',
+    color: '#9BA8C1',
+    fontWeight: '600',
   },
 });

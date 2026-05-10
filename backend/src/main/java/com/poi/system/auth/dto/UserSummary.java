@@ -7,6 +7,8 @@ public record UserSummary(
         Long id,
         String username,
         String realName,
+        String displayName,
+        String avatarUrl,
         List<String> roles,
         List<String> permissions,
         boolean wechatBound,

@@ -44,6 +44,12 @@ public class SysUser {
     @Column(name = "real_name", nullable = false, length = 64)
     private String realName;
 
+    @Column(name = "display_name", length = 64)
+    private String displayName;
+
+    @Column(name = "avatar_url", length = 512)
+    private String avatarUrl;
+
     @Column(length = 32)
     private String phone;
 

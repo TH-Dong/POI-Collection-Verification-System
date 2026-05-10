@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
+  ProfileSettings: undefined;
   AccountSecurity: undefined;
   TaskCenter: undefined;
   NoticeCenter: undefined;

@@ -332,6 +332,8 @@ public class ChatService {
                                 member.getUser().getId(),
                                 member.getUser().getUsername(),
                                 member.getUser().getRealName(),
+                                resolveDisplayName(member.getUser()),
+                                member.getUser().getAvatarUrl(),
                                 member.getUser().getRoles().stream().map(role -> role.getCode()).toList(),
                                 chatRealtimeService.isOnline(member.getUser().getId())
                         ))
@@ -347,7 +349,8 @@ public class ChatService {
                 message.getId(),
                 message.getConversation().getId(),
                 message.getSender() == null ? null : message.getSender().getId(),
-                message.getSender() == null ? "系统" : message.getSender().getRealName(),
+                message.getSender() == null ? "系统" : resolveDisplayName(message.getSender()),
+                message.getSender() == null ? null : message.getSender().getAvatarUrl(),
                 senderRoles,
                 message.getMessageType(),
                 message.getContent(),
@@ -400,6 +403,14 @@ public class ChatService {
 
     private boolean hasAdminRole(List<String> roles) {
         return roles.contains(RoleCode.ADMIN.name());
+    }
+
+    private String resolveDisplayName(SysUser user) {
+        String displayName = user.getDisplayName();
+        if (displayName == null || displayName.isBlank()) {
+            return user.getRealName();
+        }
+        return displayName;
     }
 
     private String normalizeRequiredText(String value, String code, String message) {

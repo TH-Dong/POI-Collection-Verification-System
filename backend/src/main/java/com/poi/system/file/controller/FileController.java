@@ -12,8 +12,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +28,15 @@ public class FileController {
     @PreAuthorize("hasAnyRole('COLLECTOR', 'VERIFIER', 'ADMIN')")
     public ApiResponse<FileUploadResponse> upload(@RequestParam("file") MultipartFile file) {
         return ApiResponse.success(fileStorageService.upload(file));
+    }
+
+    @GetMapping("/content")
+    public ResponseEntity<Resource> getFileContent(@RequestParam("objectName") String objectName) {
+        Resource resource = fileStorageService.loadFile(objectName);
+        MediaType mediaType = MediaTypeFactory.getMediaType(objectName).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .body(resource);
     }
 
     @GetMapping("/local/{fileName}")

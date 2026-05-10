@@ -3,6 +3,7 @@
     "name": "POI Mobile",
     "slug": "poi-mobile-app",
     "version": "0.1.0",
+    "icon": "../../icon/image.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": ["**/*"],
@@ -13,11 +14,13 @@
       }
     },
     "android": {
+      "package": "com.thdong.poiverification",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
+        "foregroundImage": "../../icon/image.png",
         "backgroundColor": "#ffffff"
       }
     },

@@ -51,6 +51,7 @@ module.exports = ({ config }) => {
         expoPublicApiBaseUrl: resolvedEnv.EXPO_PUBLIC_API_BASE_URL ?? '',
         expoPublicAmapWebKey: resolvedEnv.EXPO_PUBLIC_AMAP_WEB_KEY ?? '',
         expoPublicAmapSecurityJscode: resolvedEnv.EXPO_PUBLIC_AMAP_SECURITY_JSCODE ?? '',
+        expoPublicWechatAppId: resolvedEnv.WECHAT_APP_ID ?? '',
       },
     },
   };

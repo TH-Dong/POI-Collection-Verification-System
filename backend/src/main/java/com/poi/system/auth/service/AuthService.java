@@ -3,6 +3,7 @@ package com.poi.system.auth.service;
 import com.poi.system.audit.service.AuditLogService;
 import com.poi.system.auth.dto.LoginRequest;
 import com.poi.system.auth.dto.LoginResponse;
+import com.poi.system.auth.dto.UpdateProfileRequest;
 import com.poi.system.auth.dto.UserSummary;
 import com.poi.system.auth.dto.WeChatBindRequest;
 import com.poi.system.auth.dto.WeChatBindingResponse;
@@ -50,7 +51,16 @@ public class AuthService {
     }
 
     public UserSummary currentUser(CustomUserDetails userDetails) {
-        return toSummary(userDetails.getUser());
+        return toSummary(reloadUser(userDetails.getUser().getId()));
+    }
+
+    public UserSummary updateProfile(CustomUserDetails userDetails, UpdateProfileRequest request) {
+        SysUser user = reloadUser(userDetails.getUser().getId());
+        user.setDisplayName(normalizeOptionalText(request.displayName()));
+        user.setAvatarUrl(normalizeOptionalText(request.avatarUrl()));
+        SysUser savedUser = sysUserRepository.save(user);
+        auditLogService.recordOperation(savedUser.getId(), "USER", savedUser.getId(), "PROFILE_UPDATE", "更新个人资料");
+        return toSummary(savedUser);
     }
 
     public LoginResponse loginByWeChat(WeChatLoginRequest request, String loginIp) {
@@ -115,6 +125,8 @@ public class AuthService {
                 user.getId(),
                 user.getUsername(),
                 user.getRealName(),
+                resolveDisplayName(user),
+                user.getAvatarUrl(),
                 roleCodes,
                 PermissionCodes.resolve(roleCodes).stream().toList(),
                 user.getWechatBoundAt() != null,
@@ -142,5 +154,21 @@ public class AuthService {
             return openId;
         }
         return openId.substring(0, 4) + "****" + openId.substring(openId.length() - 4);
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    private String resolveDisplayName(SysUser user) {
+        String displayName = user.getDisplayName();
+        if (displayName == null || displayName.isBlank()) {
+            return user.getRealName();
+        }
+        return displayName;
     }
 }

@@ -4,6 +4,7 @@ import com.poi.system.common.exception.BusinessException;
 import com.poi.system.config.FileStorageProperties;
 import com.poi.system.config.MinioProperties;
 import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MakeBucketArgs;
 import com.poi.system.file.dto.FileUploadResponse;
 import com.poi.system.file.enums.FileStorageMode;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -68,7 +70,7 @@ public class FileStorageService {
                     originalFilename,
                     file.getContentType(),
                     file.getSize(),
-                    minioProperties.getEndpoint() + "/" + minioProperties.getBucket() + "/" + objectName,
+                    buildPublicFileUrl(objectName),
                     FileStorageMode.MINIO.name()
             );
         } catch (Exception ex) {
@@ -119,6 +121,27 @@ public class FileStorageService {
         return new PathResource(targetPath);
     }
 
+    public Resource loadFile(String objectName) {
+        if (fileStorageProperties.getMode() != FileStorageMode.LOCAL) {
+            try {
+                return new InputStreamResource(
+                        minioClient.getObject(
+                                GetObjectArgs.builder()
+                                        .bucket(minioProperties.getBucket())
+                                        .object(objectName)
+                                        .build()
+                        )
+                );
+            } catch (Exception ex) {
+                if (fileStorageProperties.getMode() == FileStorageMode.MINIO) {
+                    throw new BusinessException("FILE_404", "file not found", HttpStatus.NOT_FOUND);
+                }
+                log.warn("Failed to read file from MinIO, fallback to local storage: {}", ex.getMessage());
+            }
+        }
+        return loadLocalFile(normalizeLocalObjectName(objectName));
+    }
+
     private String normalizeLocalObjectName(String objectName) {
         return objectName.replace('/', '_');
     }
@@ -127,6 +150,13 @@ public class FileStorageService {
         return ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/v1/files/local/")
                 .path(fileName)
+                .toUriString();
+    }
+
+    private String buildPublicFileUrl(String objectName) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/files/content")
+                .queryParam("objectName", objectName)
                 .toUriString();
     }
 }

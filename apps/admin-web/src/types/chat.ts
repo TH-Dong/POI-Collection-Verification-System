@@ -5,6 +5,8 @@ export interface ChatParticipant {
   userId: number;
   username: string;
   realName: string;
+  displayName: string;
+  avatarUrl: string | null;
   roles: string[];
   online: boolean;
 }
@@ -14,6 +16,7 @@ export interface ChatMessage {
   conversationId: number;
   senderId: number | null;
   senderName: string;
+  senderAvatarUrl: string | null;
   senderRoles: string[];
   messageType: MessageType;
   content: string;

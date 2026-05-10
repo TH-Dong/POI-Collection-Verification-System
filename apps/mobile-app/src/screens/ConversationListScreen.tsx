@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { buildChatWebSocketUrl, fetchChatConversations } from '../api/chat';
 import { useAuthStore } from '../store/authStore';
 import type { ChatConversationSummary } from '../types/chat';
 import type { RootStackParamList } from '../types/navigation';
+import { resolveMobileFileUrl } from '../utils/fileUrl';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ConversationList'>;
 
@@ -111,7 +112,8 @@ export default function ConversationListScreen({ navigation }: Props) {
             <View style={styles.participantRow}>
               {item.participants.slice(0, 4).map((participant) => (
                 <View key={participant.userId} style={[styles.participantChip, participant.online && styles.participantChipOnline]}>
-                  <Text style={[styles.participantText, participant.online && styles.participantTextOnline]}>{participant.realName}</Text>
+                  <ConversationAvatar name={participant.displayName || participant.realName} avatarUrl={participant.avatarUrl} small />
+                  <Text style={[styles.participantText, participant.online && styles.participantTextOnline]}>{participant.displayName || participant.realName}</Text>
                 </View>
               ))}
             </View>
@@ -124,6 +126,21 @@ export default function ConversationListScreen({ navigation }: Props) {
         }
       />
     </SafeAreaView>
+  );
+}
+
+function ConversationAvatar({ name, avatarUrl, small = false }: { name: string; avatarUrl: string | null; small?: boolean }) {
+  const size = small ? 24 : 36;
+  const radius = size / 2;
+
+  return (
+      <View style={[styles.avatarWrap, { width: size, height: size, borderRadius: radius }]}>
+      {avatarUrl ? (
+        <Image source={{ uri: resolveMobileFileUrl(avatarUrl) ?? undefined }} style={styles.avatarImage} />
+      ) : (
+        <Text style={[styles.avatarFallback, small && styles.avatarFallbackSmall]}>{name.slice(0, 1).toUpperCase()}</Text>
+      )}
+    </View>
   );
 }
 
@@ -221,6 +238,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: '#F3F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   participantChipOnline: {
     backgroundColor: '#EAF8F3',
@@ -232,6 +252,24 @@ const styles = StyleSheet.create({
   },
   participantTextOnline: {
     color: '#277C68',
+  },
+  avatarWrap: {
+    backgroundColor: '#E4ECFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarFallback: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#315FD8',
+  },
+  avatarFallbackSmall: {
+    fontSize: 11,
   },
   centered: {
     flex: 1,

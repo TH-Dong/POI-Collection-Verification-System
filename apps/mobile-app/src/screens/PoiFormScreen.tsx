@@ -71,6 +71,20 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: 
   });
 }
 
+function describeOcrProvider(provider: string) {
+  if (!provider) {
+    return '来源未知';
+  }
+  if (provider.startsWith('SILICONFLOW_')) {
+    const modelName = provider.replace(/^SILICONFLOW_/, '');
+    return `本次结果由 SiliconFlow 提供的 ${modelName} 模型生成。`;
+  }
+  if (provider === 'MOCK_OCR' || provider.startsWith('MOCK_')) {
+    return '本次结果来自本地 mock 识别，不是真实大模型结果。';
+  }
+  return `本次结果来源：${provider}`;
+}
+
 async function watchSingleLocation(timeoutMs: number) {
   return new Promise<Location.LocationObject>((resolve, reject) => {
     let settled = false;
@@ -735,6 +749,7 @@ export default function PoiFormScreen({ navigation, route }: Props) {
               {ocrResult ? (
                 <View style={styles.ocrCard}>
                   <Text style={styles.metaTitle}>OCR 建议</Text>
+                  <Text style={styles.metaText}>{describeOcrProvider(ocrResult.provider)}</Text>
                   <Text style={styles.metaText}>识别文字：{ocrResult.extractedText}</Text>
                   <Text style={styles.metaText}>建议名称：{ocrResult.suggestedPoiName ?? '无'}</Text>
                   <Text style={styles.metaText}>建议分类：{ocrResult.suggestedCategoryCode ?? '无'}</Text>

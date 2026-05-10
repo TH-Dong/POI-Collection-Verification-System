@@ -23,6 +23,10 @@ public class PortalController {
                 userDetails.getUser().getId(),
                 userDetails.getUsername(),
                 userDetails.getUser().getRealName(),
+                userDetails.getUser().getDisplayName() == null || userDetails.getUser().getDisplayName().isBlank()
+                        ? userDetails.getUser().getRealName()
+                        : userDetails.getUser().getDisplayName(),
+                userDetails.getUser().getAvatarUrl(),
                 roles,
                 PermissionCodes.resolve(roles).stream().toList(),
                 userDetails.getUser().getWechatBoundAt() != null,

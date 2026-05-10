@@ -4,6 +4,7 @@ type PublicEnv = {
   expoPublicApiBaseUrl?: string;
   expoPublicAmapWebKey?: string;
   expoPublicAmapSecurityJscode?: string;
+  expoPublicWechatAppId?: string;
 };
 
 function readExpoPublicEnv(): PublicEnv {
@@ -26,11 +27,14 @@ export const EXPO_PUBLIC_API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 
 export const EXPO_PUBLIC_AMAP_WEB_KEY = process.env.EXPO_PUBLIC_AMAP_WEB_KEY ?? publicEnv.expoPublicAmapWebKey ?? '';
 export const EXPO_PUBLIC_AMAP_SECURITY_JSCODE =
   process.env.EXPO_PUBLIC_AMAP_SECURITY_JSCODE ?? publicEnv.expoPublicAmapSecurityJscode ?? '';
+export const EXPO_PUBLIC_WECHAT_APP_ID =
+  process.env.EXPO_PUBLIC_WECHAT_APP_ID ?? publicEnv.expoPublicWechatAppId ?? '';
 
 export function getPublicEnvDiagnostics() {
   return {
     apiBaseUrlPresent: Boolean(EXPO_PUBLIC_API_BASE_URL),
     amapWebKeyPresent: Boolean(EXPO_PUBLIC_AMAP_WEB_KEY),
     amapSecurityJscodePresent: Boolean(EXPO_PUBLIC_AMAP_SECURITY_JSCODE),
+    wechatAppIdPresent: Boolean(EXPO_PUBLIC_WECHAT_APP_ID),
   };
 }

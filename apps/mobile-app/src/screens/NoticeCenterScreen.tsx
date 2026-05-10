@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { fetchMyNotices, markNoticeRead } from '../api/operations';
+import { useAuthStore } from '../store/authStore';
 import type { RootStackParamList } from '../types/navigation';
 import type { NoticeItem } from '../types/operations';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NoticeCenter'>;
 
 export default function NoticeCenterScreen({ navigation }: Props) {
+  const user = useAuthStore((state) => state.user);
   const [notices, setNotices] = useState<NoticeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,6 +38,7 @@ export default function NoticeCenterScreen({ navigation }: Props) {
   }, [navigation]);
 
   const unreadCount = useMemo(() => notices.filter((item) => !item.readFlag).length, [notices]);
+  const systemGuide = useMemo(() => buildRoleSystemGuide(user?.roles ?? []), [user?.roles]);
 
   const markRead = async (notice: NoticeItem) => {
     if (!notice.noticeUserId) {
@@ -68,6 +71,16 @@ export default function NoticeCenterScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>当前还有 {unreadCount} 条未读通知，任务派发、核验结论和争议裁定都会沉淀到这里。</Text>
         </View>
 
+        <View style={styles.guideCard}>
+          <View style={styles.rowBetween}>
+            <Text style={styles.guideTitle}>{systemGuide.title}</Text>
+            <View style={styles.guideBadge}>
+              <Text style={styles.guideBadgeText}>系统公告</Text>
+            </View>
+          </View>
+          <Text style={styles.guideContent}>{systemGuide.content}</Text>
+        </View>
+
         {notices.map((notice) => (
           <View key={`${notice.noticeId}-${notice.noticeUserId ?? 'notice'}`} style={styles.card}>
             <View style={styles.rowBetween}>
@@ -94,6 +107,29 @@ export default function NoticeCenterScreen({ navigation }: Props) {
   );
 }
 
+function buildRoleSystemGuide(roles: string[]) {
+  if (roles.includes('VERIFIER')) {
+    return {
+      title: '核验端使用说明',
+      content:
+        '你当前使用的是核验者工作台。请优先处理任务中心中的高优先级任务，进入待核验队列核对点位信息、图片证据与定位准确性；如发现不符合要求的记录，需明确填写驳回意见；遇到争议记录时，请在争议处理入口补充说明并按流程升级裁定。',
+    };
+  }
+
+  if (roles.includes('COLLECTOR')) {
+    return {
+      title: '采集端使用说明',
+      content:
+        '你当前使用的是采集者工作台。请按规范完成 POI 新建、拍照、定位、分类与描述填写，提交前确认信息完整；被驳回的记录请根据整改意见修改后重新提交；通知中心用于接收流程提醒，协作会话用于和核验人员沟通点位问题。',
+    };
+  }
+
+  return {
+    title: '系统使用说明',
+    content: '该系统用于 POI 采集、核验、整改、通知与协作闭环处理，请根据当前角色进入对应的任务、通知和会话入口完成工作。',
+  };
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FBFCFD' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -101,6 +137,11 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 36, paddingBottom: 12 },
   title: { fontSize: 28, fontWeight: '700', color: '#3F3F46' },
   subtitle: { marginTop: 8, fontSize: 14, color: '#71717A', lineHeight: 22 },
+  guideCard: { marginTop: 8, marginHorizontal: 20, padding: 16, backgroundColor: '#EEF4FF', borderRadius: 14, borderWidth: 1, borderColor: '#D9E5FA' },
+  guideTitle: { fontSize: 16, fontWeight: '700', color: '#2446A6', flex: 1, marginRight: 12 },
+  guideBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: '#DCE8FB' },
+  guideBadgeText: { fontSize: 12, fontWeight: '700', color: '#2E6FE9' },
+  guideContent: { marginTop: 10, color: '#44516D', fontSize: 14, lineHeight: 22 },
   card: { marginTop: 16, marginHorizontal: 20, padding: 16, backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: '#E5E9F2' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#3F3F46', flex: 1, marginRight: 12 },

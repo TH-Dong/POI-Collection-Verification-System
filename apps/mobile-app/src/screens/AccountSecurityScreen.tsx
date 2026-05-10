@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { bindWeChat, fetchWeChatBinding, unbindWeChat } from '../api/auth';
+import { requestWeChatAuthCode } from '../services/wechatAuth';
 import { useAuthStore } from '../store/authStore';
 
 export default function AccountSecurityScreen() {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const [binding, setBinding] = useState<{ bound: boolean; openIdMasked: string | null; nickname: string | null; boundAt: string | null } | null>(null);
-  const [authCode, setAuthCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -18,13 +18,10 @@ export default function AccountSecurityScreen() {
   }, []);
 
   const handleBind = async () => {
-    if (!authCode.trim()) {
-      Alert.alert('请输入微信授权码', '本地演示环境可填写例如 wx-collector、wx-collector2、wx-verifier2。');
-      return;
-    }
     try {
       setSubmitting(true);
-      const result = await bindWeChat({ authCode: authCode.trim() });
+      const authCode = await requestWeChatAuthCode();
+      const result = await bindWeChat({ authCode });
       setBinding(result);
       if (user) {
         setUser({
@@ -36,7 +33,7 @@ export default function AccountSecurityScreen() {
       }
       Alert.alert('绑定成功', '当前账号已完成微信绑定。');
     } catch (error: any) {
-      Alert.alert('绑定失败', error?.response?.data?.message ?? '请稍后重试');
+      Alert.alert('绑定失败', error?.response?.data?.message ?? error?.message ?? '请稍后重试');
     } finally {
       setSubmitting(false);
     }
@@ -77,7 +74,7 @@ export default function AccountSecurityScreen() {
     <SafeAreaView style={styles.root}>
       <View style={styles.container}>
         <Text style={styles.title}>微信绑定</Text>
-        <Text style={styles.subtitle}>阶段 8 默认提供 mock 微信授权码，用于演示绑定与快捷登录闭环。</Text>
+        <Text style={styles.subtitle}>当前页面将直接拉起微信授权，首次绑定成功后即可使用微信快捷登录。</Text>
 
         <View style={styles.card}>
           <Text style={styles.label}>当前绑定状态</Text>
@@ -94,17 +91,8 @@ export default function AccountSecurityScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>微信授权码</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="例如 wx-collector"
-            value={authCode}
-            onChangeText={setAuthCode}
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholderTextColor="#71717A"
-          />
-          <Text style={styles.hint}>演示快捷码：`wx-collector2`、`wx-verifier2`、`wx-admin` 已预绑定；也可给当前账号绑定新码。</Text>
+          <Text style={styles.label}>绑定说明</Text>
+          <Text style={styles.hint}>点击下方按钮后会跳转微信完成授权。若当前运行在 Expo Go，请改用 development build 或正式安装包。</Text>
         </View>
 
         <Pressable style={({ pressed }) => [styles.primaryBtn, pressed && styles.primaryBtnPressed, submitting && styles.disabledBtn]} onPress={() => void handleBind()} disabled={submitting}>
@@ -162,18 +150,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#71717A',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E9F2',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#3F3F46',
-  },
   hint: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 21,
     color: '#71717A',
   },
   primaryBtn: {

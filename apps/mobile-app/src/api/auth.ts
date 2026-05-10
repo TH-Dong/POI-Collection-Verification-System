@@ -1,6 +1,7 @@
 import apiClient from './client';
 import type { ApiResponse, LoginResponse, WeChatBinding } from '../types/auth';
 import type { MobileWorkbench } from '../types/operations';
+import type { UserProfile } from '../types/auth';
 
 export async function login(payload: { username: string; password: string }) {
   const response = await apiClient.post<ApiResponse<LoginResponse>>('/api/v1/auth/login', payload);
@@ -34,5 +35,10 @@ export async function bindWeChat(payload: { authCode: string }) {
 
 export async function unbindWeChat() {
   const response = await apiClient.delete<ApiResponse<WeChatBinding>>('/api/v1/auth/wechat/bind');
+  return response.data.data;
+}
+
+export async function updateProfile(payload: { displayName: string; avatarUrl: string | null }) {
+  const response = await apiClient.put<ApiResponse<UserProfile>>('/api/v1/auth/profile', payload);
   return response.data.data;
 }

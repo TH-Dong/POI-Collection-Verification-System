@@ -9,6 +9,7 @@ public record ChatMessageResponse(
         Long conversationId,
         Long senderId,
         String senderName,
+        String senderAvatarUrl,
         List<String> senderRoles,
         MessageType messageType,
         String content,

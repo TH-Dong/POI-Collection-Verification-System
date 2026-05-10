@@ -14,3 +14,5 @@ target/
 .env.*.local
 .expo/
 .expo-shared/
+apps/mobile-app/android/keystore.properties
+apps/mobile-app/android/app/*.keystore

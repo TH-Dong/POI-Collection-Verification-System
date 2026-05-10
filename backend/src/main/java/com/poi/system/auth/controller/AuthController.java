@@ -2,6 +2,7 @@ package com.poi.system.auth.controller;
 
 import com.poi.system.auth.dto.LoginRequest;
 import com.poi.system.auth.dto.LoginResponse;
+import com.poi.system.auth.dto.UpdateProfileRequest;
 import com.poi.system.auth.dto.UserSummary;
 import com.poi.system.auth.dto.WeChatBindRequest;
 import com.poi.system.auth.dto.WeChatBindingResponse;
@@ -16,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +42,14 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<UserSummary> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ApiResponse.success(authService.currentUser(userDetails));
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse<UserSummary> updateProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        return ApiResponse.success(authService.updateProfile(userDetails, request));
     }
 
     @GetMapping("/wechat/binding")

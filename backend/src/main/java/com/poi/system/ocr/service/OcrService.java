@@ -11,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +30,7 @@ public class OcrService {
     private static final Pattern EXTENSION_PATTERN = Pattern.compile("\\.[^.]+$");
     private static final Pattern JSON_OBJECT_PATTERN = Pattern.compile("\\{.*}", Pattern.DOTALL);
     private static final String UNRECOGNIZED_TEXT = "未稳定识别到清晰招牌文字";
+    private static final Duration MIN_OCR_TIMEOUT = Duration.ofSeconds(90);
     private static final String QWEN_SYSTEM_PROMPT = """
             你是 POI 数据采集系统中的 OCR 与图片理解助手。
             你的任务是识别现场照片中的门头、招牌、牌匾、机构名称或其他与地点身份最相关的文字，
@@ -53,6 +55,19 @@ public class OcrService {
             4. suggestedDescription 使用自然中文，例如“该点位疑似为社区卫生服务站，门头可见相关字样。”
             5. suggestedCategoryCode 必须使用给定英文编码。
             6. 如果没有把握，confidence 降低，并把不确定字段留空字符串。
+            """;
+    private static final String QWEN_TEXT_ONLY_PROMPT = """
+            这是一次针对招牌/门头文字的二次强化识别。
+            请忽略地点分类和描述推断，优先尽可能忠实地提取图片里看得见的中文、英文、数字和店名文字，不要编造，不要脑补。
+
+            仍然返回同样的 JSON 对象：
+            {
+              "extractedText": "尽量完整的原始识别文字，无法识别时返回空字符串",
+              "suggestedPoiName": "如果 extractedText 中能明确看出主店名，提炼主名称，否则返回空字符串",
+              "suggestedDescription": "如果无法判断就返回空字符串",
+              "suggestedCategoryCode": "如果无法判断就返回 OTHER",
+              "confidence": "0 到 1 之间的小数"
+            }
             """;
 
     private static final Map<String, String> CATEGORY_KEYWORDS = Map.ofEntries(
@@ -132,7 +147,7 @@ public class OcrService {
         this.ocrProperties = ocrProperties;
         this.objectMapper = objectMapper;
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(ocrProperties.timeout())
+                .connectTimeout(resolveRequestTimeout())
                 .build();
     }
 
@@ -157,27 +172,16 @@ public class OcrService {
             String contentType = resolveImageContentType(file);
             byte[] bytes = file.getBytes();
             String dataUrl = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(bytes);
-            String requestBody = objectMapper.writeValueAsString(buildQwenPayload(dataUrl));
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(ocrProperties.baseUrl() + "/chat/completions"))
-                    .timeout(ocrProperties.timeout())
-                    .header("Authorization", "Bearer " + ocrProperties.apiKey().trim())
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            if (response.statusCode() >= 400) {
-                throw new BusinessException(
-                        "OCR_002",
-                        "SiliconFlow OCR 调用失败: " + extractRemoteErrorMessage(response.body()),
-                        HttpStatus.BAD_GATEWAY
-                );
+            ModelSuggestion suggestion = requestSiliconFlow(dataUrl, QWEN_USER_PROMPT);
+            OcrRecognizeResponse normalized = normalizeSuggestion(suggestion, providerName());
+            if (shouldRetryTextFocused(normalized)) {
+                ModelSuggestion textFocusedSuggestion = requestSiliconFlow(dataUrl, QWEN_TEXT_ONLY_PROMPT);
+                OcrRecognizeResponse retried = normalizeSuggestion(textFocusedSuggestion, providerName());
+                if (!UNRECOGNIZED_TEXT.equals(retried.extractedText())) {
+                    return retried;
+                }
             }
-
-            ModelSuggestion suggestion = parseModelResponse(response.body());
-            return normalizeSuggestion(suggestion, providerName());
+            return normalized;
         } catch (BusinessException ex) {
             throw ex;
         } catch (IOException ex) {
@@ -210,20 +214,49 @@ public class OcrService {
         );
     }
 
-    private Map<String, Object> buildQwenPayload(String dataUrl) {
+    private ModelSuggestion requestSiliconFlow(String dataUrl, String userPrompt) throws IOException, InterruptedException {
+        String requestBody = objectMapper.writeValueAsString(buildQwenPayload(dataUrl, userPrompt));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(ocrProperties.baseUrl() + "/chat/completions"))
+                .timeout(resolveRequestTimeout())
+                .header("Authorization", "Bearer " + ocrProperties.apiKey().trim())
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() >= 400) {
+            throw new BusinessException(
+                    "OCR_002",
+                    "SiliconFlow OCR 调用失败: " + extractRemoteErrorMessage(response.body()),
+                    HttpStatus.BAD_GATEWAY
+            );
+        }
+        return parseModelResponse(response.body());
+    }
+
+    private Map<String, Object> buildQwenPayload(String dataUrl, String userPrompt) {
         return Map.of(
-                "model", ocrProperties.model(),
+                "model", resolveVisionModel(),
                 "messages", List.of(
                         Map.of(
                                 "role", "user",
                                 "content", List.of(
-                                        Map.of("type", "image_url", "image_url", Map.of("url", dataUrl, "detail", "auto")),
-                                        Map.of("type", "text", "text", QWEN_SYSTEM_PROMPT + "\n\n" + QWEN_USER_PROMPT)
+                                        Map.of("type", "image_url", "image_url", Map.of("url", dataUrl, "detail", "high")),
+                                        Map.of("type", "text", "text", QWEN_SYSTEM_PROMPT + "\n\n" + userPrompt)
                                 )
                         )
                 ),
                 "temperature", 0.1D
         );
+    }
+
+    private boolean shouldRetryTextFocused(OcrRecognizeResponse response) {
+        return response == null
+                || response.extractedText() == null
+                || UNRECOGNIZED_TEXT.equals(response.extractedText())
+                || response.extractedText().length() < 2;
     }
 
     private ModelSuggestion parseModelResponse(String responseBody) throws IOException {
@@ -375,7 +408,26 @@ public class OcrService {
     }
 
     private String providerName() {
-        return truncate("SILICONFLOW_" + ocrProperties.model(), 64);
+        return truncate("SILICONFLOW_" + resolveVisionModel(), 64);
+    }
+
+    private String resolveVisionModel() {
+        String configured = ocrProperties.model();
+        if (configured == null || configured.isBlank()) {
+            return "Qwen/Qwen3-VL-32B-Instruct";
+        }
+        if (configured.contains("Qwen3-VL") && configured.contains("Thinking")) {
+            return configured.replace("Thinking", "Instruct");
+        }
+        return configured;
+    }
+
+    private Duration resolveRequestTimeout() {
+        Duration configured = ocrProperties.timeout();
+        if (configured == null) {
+            return MIN_OCR_TIMEOUT;
+        }
+        return configured.compareTo(MIN_OCR_TIMEOUT) < 0 ? MIN_OCR_TIMEOUT : configured;
     }
 
     private String extractRemoteErrorMessage(String responseBody) {

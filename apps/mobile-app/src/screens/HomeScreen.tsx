@@ -165,7 +165,7 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={styles.workbenchText}>工作台</Text>
           </View>
           <Text style={styles.homeTitle}>首页</Text>
-          <Text style={styles.homeSubtitle}>欢迎回来，{user?.realName ?? user?.username}。</Text>
+          <Text style={styles.homeSubtitle}>欢迎回来，{user?.displayName ?? user?.realName ?? user?.username}。</Text>
           <Text style={styles.homeSubtitle}>这里是你的今日工作概览</Text>
         </View>
         <HomeHeroOrbit />
@@ -184,7 +184,7 @@ export default function HomeScreen({ navigation }: Props) {
               <Text style={styles.heroBadgeText}>POI Collection</Text>
             </View>
             <Text style={styles.heroTitle}>{getTabTitle(activeTab)}</Text>
-            <Text style={styles.heroSubtitle}>{getTabSubtitle(activeTab, user?.realName ?? user?.username)}</Text>
+            <Text style={styles.heroSubtitle}>{getTabSubtitle(activeTab, user?.displayName ?? user?.realName ?? user?.username)}</Text>
           </View>
           <FeatureHeroCube />
         </View>
@@ -236,7 +236,7 @@ export default function HomeScreen({ navigation }: Props) {
 
   function renderHomePanel() {
     const roleLabel = user?.roles.length ? getRoleLabel(user.roles[0]) : '用户';
-    const noticeText = loading ? '加载中...' : (message || '暂无公告');
+    const noticeText = loading ? '加载中...' : getRoleSystemAnnouncement(user?.roles ?? [], message);
     const wechatText = user?.wechatBound ? `已绑定${user.wechatNickname ? ` · ${user.wechatNickname}` : ''}` : '未绑定';
 
     return (
@@ -251,19 +251,26 @@ export default function HomeScreen({ navigation }: Props) {
               <Text style={styles.homeStatusRoleText}>{roleLabel}</Text>
             </View>
           </View>
-          <Text style={styles.homeStatusName}>{user?.realName ?? user?.username}</Text>
+          <Text style={styles.homeStatusName}>{user?.displayName ?? user?.realName ?? user?.username}</Text>
 
           <View style={styles.homeStatusRows}>
             <HomeStatusRow icon="wechat" iconColor="#33B66F" label="微信状态" value={wechatText} />
-            <HomeStatusRow icon="bullhorn-variant-outline" iconColor={appTheme.primary} label="系统公告" value={noticeText} last />
+            <HomeStatusRow
+              icon="bullhorn-variant-outline"
+              iconColor={appTheme.primary}
+              label="系统公告"
+              value={noticeText}
+              last
+              onPress={() => navigation.navigate('NoticeCenter')}
+            />
           </View>
         </View>
 
         <View style={styles.homeMetricGrid}>
-          <MetricCard icon="clipboard-check-outline" watermarkIcon="clipboard-text-outline" label="待处理任务" value={pendingTaskCount} tone="blue" />
-          <MetricCard icon="alert-decagram-outline" watermarkIcon="shield-alert-outline" label="高优先级任务" value={urgentTaskCount} tone="amber" />
-          <MetricCard icon="bell-outline" watermarkIcon="bell-outline" label="未读通知" value={unreadNoticeCount} tone="violet" />
-          <MetricCard icon="chat-outline" watermarkIcon="message-text-outline" label="未读会话" value={unreadChatCount} tone="mint" />
+          <MetricCard icon="clipboard-check-outline" watermarkIcon="clipboard-text-outline" label="待处理任务" value={pendingTaskCount} tone="blue" onPress={() => navigation.navigate('TaskCenter')} />
+          <MetricCard icon="alert-decagram-outline" watermarkIcon="shield-alert-outline" label="高优先级任务" value={urgentTaskCount} tone="amber" onPress={() => navigation.navigate('TaskCenter')} />
+          <MetricCard icon="bell-outline" watermarkIcon="bell-outline" label="未读通知" value={unreadNoticeCount} tone="violet" onPress={() => navigation.navigate('NoticeCenter')} />
+          <MetricCard icon="chat-outline" watermarkIcon="message-text-outline" label="未读会话" value={unreadChatCount} tone="mint" onPress={() => navigation.navigate('ConversationList')} />
         </View>
       </View>
     );
@@ -327,6 +334,7 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.settingsCard}>
+          <SettingsEntryRow icon="account-circle-outline" title="个人资料" desc="修改昵称与头像展示效果" onPress={() => navigation.navigate('ProfileSettings')} />
           <SettingsEntryRow icon="shield-account-outline" title="账号安全" desc="管理微信绑定与快捷登录状态" onPress={() => navigation.navigate('AccountSecurity')} />
           <SettingsEntryRow icon="cloud-upload-outline" title="上传联调" desc="验证图片上传和对象存储状态" onPress={() => navigation.navigate('UploadTest')} />
           <SettingsEntryRow icon="logout" title="退出登录" desc="清除本地登录凭据" onPress={logout} danger last />
@@ -342,15 +350,17 @@ function HomeStatusRow({
   label,
   value,
   last = false,
+  onPress,
 }: {
   icon: IconName;
   iconColor: string;
   label: string;
   value: string;
   last?: boolean;
+  onPress?: () => void;
 }) {
   return (
-    <View style={[styles.homeStatusRow, last && styles.rowLast]}>
+    <Pressable style={({ pressed }) => [styles.homeStatusRow, last && styles.rowLast, pressed && onPress && styles.homeStatusRowPressed]} onPress={onPress} disabled={!onPress}>
       <View style={styles.homeStatusRowLeft}>
         <MaterialCommunityIcons name={icon} size={20} color={iconColor} />
         <Text style={styles.homeStatusRowLabel}>{label}</Text>
@@ -359,7 +369,7 @@ function HomeStatusRow({
         <Text style={styles.homeStatusRowValue} numberOfLines={1}>{value}</Text>
         <MaterialCommunityIcons name="chevron-right" size={18} color="#7E869A" />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -369,17 +379,26 @@ function MetricCard({
   label,
   value,
   tone,
+  onPress,
 }: {
   icon: IconName;
   watermarkIcon: IconName;
   label: string;
   value: number;
   tone: 'blue' | 'amber' | 'violet' | 'mint';
+  onPress: () => void;
 }) {
   const palette = getMetricTone(tone);
 
   return (
-    <View style={[styles.metricCard, { backgroundColor: palette.cardBg, borderColor: palette.borderColor }]}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.metricCard,
+        { backgroundColor: palette.cardBg, borderColor: palette.borderColor },
+        pressed && styles.metricCardPressed,
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.metricWatermark}>
         <MaterialCommunityIcons name={watermarkIcon} size={64} color={palette.watermarkColor} />
       </View>
@@ -388,7 +407,7 @@ function MetricCard({
       </View>
       <Text style={[styles.metricValue, { color: palette.accent }]}>{value}</Text>
       <Text style={styles.metricLabel}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -646,6 +665,16 @@ function getRoleLabel(role: string) {
     default:
       return role;
   }
+}
+
+function getRoleSystemAnnouncement(roles: string[], fallbackMessage: string) {
+  if (roles.includes('VERIFIER')) {
+    return '核验端公告：请优先处理高优先级任务，核对点位信息、图片证据与整改说明，异常记录需及时进入争议流程。';
+  }
+  if (roles.includes('COLLECTOR')) {
+    return '采集端公告：请按规范完成拍照、定位、分类和描述填写，提交前确认信息完整，驳回记录需按意见整改后重新提交。';
+  }
+  return fallbackMessage || '系统公告：请根据当前角色完成 POI 采集、核验、通知和协作处理。';
 }
 
 function getMetricTone(tone: 'blue' | 'amber' | 'violet' | 'mint') {
@@ -1295,6 +1324,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 10,
   },
+  homeStatusRowPressed: {
+    backgroundColor: '#F6F9FF',
+  },
   homeStatusRowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1335,6 +1367,10 @@ const styles = StyleSheet.create({
     padding: 10,
     overflow: 'hidden',
     position: 'relative',
+  },
+  metricCardPressed: {
+    transform: [{ scale: 0.985 }],
+    opacity: 0.96,
   },
   metricWatermark: {
     position: 'absolute',

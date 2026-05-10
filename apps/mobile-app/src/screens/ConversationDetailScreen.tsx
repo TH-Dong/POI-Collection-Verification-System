@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { buildChatWebSocketUrl, fetchConversationDetail, markConversationRead, sendConversationMessage } from '../api/chat';
 import { useAuthStore } from '../store/authStore';
 import type { ChatConversationDetail } from '../types/chat';
 import type { RootStackParamList } from '../types/navigation';
+import { resolveMobileFileUrl } from '../utils/fileUrl';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ConversationDetail'>;
 
@@ -66,7 +67,7 @@ export default function ConversationDetailScreen({ navigation, route }: Props) {
   }, [route.params.conversationId, token]);
 
   const participantsText = useMemo(() => {
-    return detail?.summary.participants.map((item) => `${item.realName}${item.online ? ' · 在线' : ''}`).join('、') || '';
+    return detail?.summary.participants.map((item) => `${item.displayName || item.realName}${item.online ? ' · 在线' : ''}`).join('、') || '';
   }, [detail]);
 
   const submitMessage = async () => {
@@ -118,11 +119,15 @@ export default function ConversationDetailScreen({ navigation, route }: Props) {
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.messageList}
           renderItem={({ item }) => (
-            <View style={[styles.messageBubble, item.mine ? styles.messageMine : styles.messageOther]}>
-              <Text style={[styles.messageMeta, item.mine && styles.messageMetaMine]}>
-                {item.senderName} · {new Date(item.createdAt).toLocaleString()}
-              </Text>
-              <Text style={[styles.messageText, item.mine && styles.messageTextMine]}>{item.content}</Text>
+            <View style={[styles.messageRow, item.mine ? styles.messageRowMine : styles.messageRowOther]}>
+              {!item.mine ? <ChatAvatar name={item.senderName} avatarUrl={item.senderAvatarUrl} /> : null}
+              <View style={[styles.messageBubble, item.mine ? styles.messageMine : styles.messageOther]}>
+                <Text style={[styles.messageMeta, item.mine && styles.messageMetaMine]}>
+                  {item.senderName} · {new Date(item.createdAt).toLocaleString()}
+                </Text>
+                <Text style={[styles.messageText, item.mine && styles.messageTextMine]}>{item.content}</Text>
+              </View>
+              {item.mine ? <ChatAvatar name={item.senderName} avatarUrl={item.senderAvatarUrl} /> : null}
             </View>
           )}
         />
@@ -143,6 +148,18 @@ export default function ConversationDetailScreen({ navigation, route }: Props) {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+function ChatAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+  return (
+    <View style={styles.avatarWrap}>
+      {avatarUrl ? (
+        <Image source={{ uri: resolveMobileFileUrl(avatarUrl) ?? undefined }} style={styles.avatarImage} />
+      ) : (
+        <Text style={styles.avatarFallback}>{name.slice(0, 1).toUpperCase()}</Text>
+      )}
+    </View>
   );
 }
 
@@ -171,12 +188,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    marginBottom: 12,
+  },
+  messageRowMine: {
+    justifyContent: 'flex-end',
+  },
+  messageRowOther: {
+    justifyContent: 'flex-start',
+  },
   messageBubble: {
     maxWidth: '82%',
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 16,
-    marginBottom: 12,
   },
   messageMine: {
     alignSelf: 'flex-end',
@@ -203,6 +231,24 @@ const styles = StyleSheet.create({
   },
   messageTextMine: {
     color: '#FFFFFF',
+  },
+  avatarWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#E4ECFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarFallback: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#315FD8',
   },
   footer: {
     paddingHorizontal: 20,

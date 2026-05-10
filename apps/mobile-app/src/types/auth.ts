@@ -2,6 +2,8 @@ export interface UserProfile {
   id: number;
   username: string;
   realName: string;
+  displayName: string;
+  avatarUrl: string | null;
   roles: string[];
   permissions: string[];
   wechatBound: boolean;
