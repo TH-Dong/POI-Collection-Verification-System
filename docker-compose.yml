@@ -6,8 +6,8 @@ services:
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-poi_system}
       MYSQL_USER: ${MYSQL_USERNAME:-poi_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-poi_password}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me}
     ports:
       - "3306:3306"
     volumes:
@@ -32,7 +32,7 @@ services:
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -47,7 +47,7 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      until /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin123}; do
+      until /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-change-me}; do
         echo 'waiting for minio...';
         sleep 2;
       done;
@@ -62,7 +62,7 @@ services:
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-change-me}
     ports:
       - "5672:5672"
       - "15672:15672"

@@ -2,6 +2,7 @@
 node_modules/
 dist/
 build/
+apps/mobile-app/android/app/build/
 .idea/
 .vscode/
 *.iml
@@ -12,6 +13,8 @@ target/
 .env
 .env.local
 .env.*.local
+apps/**/.env
+apps/**/.env.local
 .expo/
 .expo-shared/
 apps/mobile-app/android/keystore.properties
